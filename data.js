@@ -117,6 +117,8 @@ app.get("/api/dictionary/:language/:entry", async (req, res, next) => {
     } else if (slugLanguage === "uk") {
       language = "english";
       nation = "uk";
+    } else if (slugLanguage === "en-es") {
+      language = "english-spanish";
     } else if (slugLanguage === "en-tw") {
       language = "english-chinese-traditional";
     } else if (slugLanguage === "en-cn") {
@@ -146,7 +148,7 @@ app.get("/api/dictionary/:language/:entry", async (req, res, next) => {
     const $ = cheerio.load(dictionaryResponse.value.data);
     const siteurl = "https://dictionary.cambridge.org";
 
-    const word = $(".hw.dhw").first().text();
+    const word = $(".hw.dhw").first().text().trim();
     
     if (!word) {
       return res.status(404).json({ error: "word not found" });
@@ -161,12 +163,12 @@ app.get("/api/dictionary/:language/:entry", async (req, res, next) => {
       const posNode = $(s).find(".dpos-g").first();
       if (!posNode.length) return;
       
-      const p = posNode.text();
+      const p = posNode.text().trim();
       $(s).find(".dpron-i").each((j, node) => {
         const $node = $(node);
-        const lang = $node.find(".region.dreg").text();
+        const lang = $node.find(".region.dreg").text().trim();
         const audioSrc = $node.find("audio source").attr("src");
-        const pron = $node.find(".pron.dpron").text();
+        const pron = $node.find(".pron.dpron").text().trim();
         
         if (audioSrc && pron) {
           audio.push({ pos: p, lang: lang, url: siteurl + audioSrc, pron: pron });
@@ -177,17 +179,17 @@ app.get("/api/dictionary/:language/:entry", async (req, res, next) => {
     // definition & example
     const definition = $(".def-block.ddef_block").map((index, element) => {
       const $element = $(element);
-      const pos = $element.closest(".pr.entry-body__el").find(".pos.dpos").first().text();
+      const pos = $element.closest(".pr.entry-body__el").find(".pos.dpos").first().text().trim();
       const source = $element.closest(".pr.dictionary").attr("data-id");
-      const text = $element.find(".def.ddef_d.db").text();
-      const translation = $element.find(".def-body.ddef_b > span.trans.dtrans").text();
+      const text = $element.find(".def.ddef_d.db").text().trim();
+      const translation = $element.find(".def-body.ddef_b > span.trans.dtrans").text().trim();
       
       const example = $element.find(".def-body.ddef_b > .examp.dexamp").map((i, ex) => {
         const $ex = $(ex);
         return {
           id: i,
-          text: $ex.find(".eg.deg").text(),
-          translation: $ex.find(".trans.dtrans").text(),
+          text: $ex.find(".eg.deg").text().trim(),
+          translation: $ex.find(".trans.dtrans").text().trim(),
         };
       }).get();
 
